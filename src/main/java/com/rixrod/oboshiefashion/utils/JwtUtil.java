@@ -21,9 +21,9 @@ public class JwtUtil {
 
 //    @Value("${jwt.secret:$2a$12$xbwajyHUartxNixJvsQga.Ip41EViTHoj0GCxeFbe2GX8cHJ5IWc6}")
     private String SECRET_KEY = "$2a$12$xbwajyHUartxNixJvsQga.Ip41EViTHoj0GCxeFbe2GX8cHJ5IWc6";
-
-    private final long ACCESS_TOKEN_EXPIRATION_LIMIT = 1000 * 60 * 1;
-    private final long REFRESH_TOKEN_EXPIRATION_LIMIT = ACCESS_TOKEN_EXPIRATION_LIMIT * 10;
+    private final long SIX_HOURS = 1000 * 60 * 60 * 6;
+    private final long ACCESS_TOKEN_EXPIRATION_LIMIT = SIX_HOURS;
+    private final long REFRESH_TOKEN_EXPIRATION_LIMIT = ACCESS_TOKEN_EXPIRATION_LIMIT * 730; // 6 months
 
     public String extractEmail(String token){
         return extractClaim(token, Claims::getSubject);
@@ -49,8 +49,7 @@ public class JwtUtil {
     public Map<String, String> generateTokens(AppUser appUser, HttpServletRequest request){
         String accessToken = createToken(appUser, request);
         String refreshToken = createRefreshToken(appUser, request);
-        Map<String, String> tokens = Map.of("access_token", accessToken, "refresh_token", refreshToken);
-        return tokens;
+        return Map.of("access_token", accessToken, "refresh_token", refreshToken);
     }
 
     public String createAccessToken(AppUser appUser, HttpServletRequest request){
@@ -62,7 +61,7 @@ public class JwtUtil {
                 .claim("user", appUser)
                 .claim("roles", appUser.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .setSubject(appUser.getEmail())
-                .setIssuer(request.getRequestURI().toString())
+                .setIssuer(request.getRequestURI())
                 .setAudience("audience")
                 .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date()) // for example, now
@@ -75,7 +74,7 @@ public class JwtUtil {
     private String createRefreshToken(AppUser appUser, HttpServletRequest request) {
         return Jwts.builder()
                 .setSubject(appUser.getEmail())
-                .setIssuer(request.getRequestURI().toString())
+                .setIssuer(request.getRequestURI())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_LIMIT))
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();

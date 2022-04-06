@@ -40,7 +40,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
         AppUser user = (AppUser) authentication.getPrincipal();
         response.setContentType(APPLICATION_JSON_VALUE);
         JwtUtil jwtUtil = new JwtUtil();
